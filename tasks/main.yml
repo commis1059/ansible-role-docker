@@ -1,0 +1,66 @@
+- name: Install required package for docker
+  package:
+    name:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+    state: present
+  become: true
+
+- name: Exist docker repository?
+  stat:
+    path: /etc/yum.repos.d/docker-ce.repo
+  failed_when: no
+  changed_when: no
+  register: docker_repo
+
+- name: Set docker repository
+  command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  when: not docker_repo.stat.exists
+  become: true
+
+- name: Disable docker repository
+  replace:
+    path: /etc/yum.repos.d/docker-ce.repo
+    regexp: "enabled *= *1"
+    replace: "enabled=0"
+  become: yes
+
+- name: Install docker
+  yum:
+    name:
+      - "docker-ce-{{ docker.version }}"
+      - "docker-ce-cli-{{ docker.version }}"
+      - containerd.io
+    state: present
+    enablerepo: docker-ce-stable
+  become: true
+
+- name: Enable docker
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Install docker-compose
+  get_url:
+    url: "https://github.com/docker/compose/releases/download/{{ docker_compose.version }}/docker-compose-Linux-x86_64"
+    dest: /usr/local/bin/docker-compose
+    force: yes
+    mode: 0755
+  become: yes
+
+- name: Link docker-compose
+  file:
+    src: /usr/local/bin/docker-compose
+    dest: /usr/bin
+    state: link
+  become: yes
+
+- name: Install docker-compose completion
+  get_url:
+    url: "https://raw.githubusercontent.com/docker/compose/{{ docker_compose.version }}/contrib/completion/bash/docker-compose"
+    dest: /etc/bash_completion.d/docker-compose
+    force: yes
+  become: yes
