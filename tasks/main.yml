@@ -1,40 +1,9 @@
-- name: Install required package for docker
-  package:
-    name:
-      - yum-utils
-      - device-mapper-persistent-data
-      - lvm2
-    state: present
-  become: true
+---
+- include_tasks: redhat.yml
+  when: ansible_os_family == 'RedHat'
 
-- name: Exist docker repository?
-  stat:
-    path: /etc/yum.repos.d/docker-ce.repo
-  failed_when: no
-  changed_when: no
-  register: docker_repo
-
-- name: Set docker repository
-  command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-  when: not docker_repo.stat.exists
-  become: true
-
-- name: Disable docker repository
-  replace:
-    path: /etc/yum.repos.d/docker-ce.repo
-    regexp: "enabled *= *1"
-    replace: "enabled=0"
-  become: yes
-
-- name: Install docker
-  yum:
-    name:
-      - "docker-ce-{{ docker.version }}"
-      - "docker-ce-cli-{{ docker.version }}"
-      - containerd.io
-    state: present
-    enablerepo: docker-ce-stable
-  become: true
+- include_tasks: debian.yml
+  when: ansible_os_family == 'Debian'
 
 - name: Enable docker
   service:
