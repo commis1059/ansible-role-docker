@@ -31,8 +31,8 @@
 - name: Install docker
   package:
     name:
-      - "docker-ce-{{ docker.version }}"
-      - "docker-ce-cli-{{ docker.version }}"
+      - "docker-ce={{ docker.version }}"
+      - "docker-ce-cli={{ docker.version }}"
       - containerd.io
     state: present
   become: true
