@@ -35,5 +35,4 @@
       - "docker-ce-cli-{{ docker.version }}"
       - containerd.io
     state: present
-    enablerepo: docker-ce-stable
   become: true
